@@ -1,0 +1,75 @@
+# Реализация паттерна Singleton для магазина
+class ClothingStore:
+    _instance = None  # Статическая переменная для хранения единственного экземпляра магазина
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(ClothingStore, cls).__new__(cls)
+            cls._instance.init_store()  # Инициализация магазина при первом создании
+        return cls._instance
+
+    def init_store(self):
+        self.inventory = {}  # Инвентарь магазина
+        self.discount_strategy = None  # Стратегия расчета скидки
+
+    def set_discount_strategy(self, strategy):
+        self.discount_strategy = strategy
+
+    def add_item(self, item_name, price):
+        self.inventory[item_name] = price
+
+    def calculate_discounted_price(self, item_name):
+        if item_name in self.inventory:
+            original_price = self.inventory[item_name]
+            if self.discount_strategy:
+                return self.discount_strategy.apply_discount(original_price)
+            else:
+                return original_price
+        else:
+            return None
+
+# Реализация паттерна Strategy для стратегий расчета скидки
+class DiscountStrategy:
+    def apply_discount(self, original_price):
+        pass
+
+# Конкретная стратегия без скидки
+class NoDiscountStrategy(DiscountStrategy):
+    def apply_discount(self, original_price):
+        return original_price
+
+# Конкретная стратегия с процентной скидкой
+class PercentageDiscountStrategy(DiscountStrategy):
+    def __init__(self, percentage):
+        self.percentage = percentage
+
+    def apply_discount(self, original_price):
+        return original_price * (1 - self.percentage / 100)
+
+def main():
+    store = ClothingStore()
+
+    # Добавляем товары в магазин
+    store.add_item("Футболка", 20.0)
+    store.add_item("Джинсы", 50.0)
+    store.add_item("Платье", 80.0)
+
+    # Выводим доступные товары
+    print("Доступные товары:")
+    for item in store.inventory:
+        print(f"{item}: ${store.inventory[item]:.2f}")
+
+    # Вводим процент скидки
+    discount_percentage = float(input("Введите процент скидки: "))
+    store.set_discount_strategy(PercentageDiscountStrategy(discount_percentage))
+
+    # Выбираем товар для расчета скидки
+    item_name = input("Введите название товара: ")
+    discounted_price = store.calculate_discounted_price(item_name)
+    if discounted_price is not None:
+        print(f"Цена товара с учетом скидки: ${discounted_price:.2f}")
+    else:
+        print("Такой товар не найден")
+
+if __name__ == "__main__":
+    main()
